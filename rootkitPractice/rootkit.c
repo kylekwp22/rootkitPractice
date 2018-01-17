@@ -18,4 +18,45 @@ void ProcessNotifyCallBackRoutine(
 
 	}
 }
-//Callback2 , used when the driver or libraries are being loaded. 
+//Callback2 , used when the driver or libraries are being loaded.
+void LoadImageCallBackCallBackRoutine(
+IN PUNICODE_STRING FullImageName,
+IN HANDLE ProcessId,
+IN PIMAGE_INFO ImageInfo
+)
+{
+	WCHAR *pwsName = NULL;
+	if (FullImageName == NULL) {
+		goto exit;
+	}
+	// allocate memory to store strings
+	// it has to be nonpagedpool : kernel level reference 
+	pwsName = (WCHAR *)ExAllocatePool(NonPagedPool,
+		FullImageName->Length + sizeof(WCHAR));
+
+	//copying string
+	memcpy(pwsName, FullImageName->Buffer, FullImageName->Length);
+
+	pwsName[FullImageName->Length / sizeof(WCHAR)] = 0; //NULL
+
+	DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0, "PROCESS  0x%X is loading (%ws) ", ProcessId,pwsName);
+
+	if (ImageInfo->SystemModeImage) 
+		//if it's not 0 then
+		//the thing being loaded is kernel driver
+	{
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0, "PROCESS  0x%X is loading Driver (%ws) ", ProcessId, pwsName);
+
+	}
+	else { // if it's 0 user dll
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0, "PROCESS  0x%X is loading dll (%ws) ", ProcessId, pwsName);
+	}
+
+exit:
+	if (pwsName) {
+		ExFreePool(pwsName); //counter part of Exallocatepool
+	}
+}
+
+//unload Routine
+
