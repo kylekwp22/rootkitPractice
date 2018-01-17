@@ -59,4 +59,33 @@ exit:
 }
 
 //unload Routine
+void MyDriverUnload
+(
+	IN PDRIVER_OBJECT DriverObject
+)
+{
+	UNREFERENCED_PARAMETER(DriverObject);
 
+	DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0, "Unloading Driver\n");
+
+	//if I unload driver without unregistering callbacks, bsod..
+	PsSetCreateProcessNotifyRoutine(ProcessNotifyCallBackRoutine, TRUE);
+	PsRemoveLoadImageNotifyRoutine(LoadImageCallBackCallBackRoutine);
+}
+
+NTSTATUS DriverEntry
+(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PUNICODE_STRING RegistryPath
+
+)
+{
+	UNREFERENCED_PARAMETER(DriverObject);
+	UNREFERENCED_PARAMETER(RegistryPath);
+
+	DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0, "Driver Loading\n");
+	DriverObject->DriverUnload = MyDriverUnload; //unload routine, if I don't define this, the driver will never unload itself.
+	PsSetCreateProcessNotifyRoutine(ProcessNotifyCallBackRoutine, FALSE);
+	PsSetLoadImageNotifyRoutine(LoadImageCallBackCallBackRoutine);
+	return STATUS_SUCCESS;
+}
